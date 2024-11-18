@@ -1,0 +1,32 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "murilostefanini@gmail.com",
+                "Name": "Murilo Stefanini"
+            }
+        ],
+        "BugReportUrl": "",
+        "Category": "Multimedia",
+        "Description": "RTSP stream viewer", 
+        "FormFactors": [
+            "tablet",
+            "handset",
+            "desktop"
+        ],
+        "Icon": "video-vivo",
+        "Id": "com.github.murilops84.rtspviewer",
+        "License": "GPL-2.0+",
+        "Name": "RTSP Viewer",
+        "ServiceTypes": [
+            "Plasma/Applet"
+        ],
+        "Version": "3.0",
+        "Website": "https://kde.org/plasma-desktop"
+    },
+    "X-KDE-ParentApp": "org.kde.plasmashell",
+    "X-Plasma-API": "declarativeappletscript",
+    "X-Plasma-MainScript": "ui/main.qml",
+    "X-Plasma-Provides": [
+    ]
+}
