@@ -1,12 +1,11 @@
 import QtQuick 2.12
-import QtQuick.Controls 2.8 as QQC2
+import QtQuick.Controls 2.8
 import QtQuick.Layouts 1.0
 import QtQuick.Dialogs 1.1
 
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.kirigami 2.14 as Kirigami
-import org.kde.plasma.components 3.0 as PlasmaComponents3
 
 ColumnLayout {
   id: connections
@@ -20,7 +19,7 @@ ColumnLayout {
     RowLayout {
       Layout.fillWidth: true
   
-      QQC2.TextField {
+      TextField {
         id: newStreamUrl
         Layout.fillWidth: true
         implicitWidth: parent.width
@@ -28,7 +27,7 @@ ColumnLayout {
         placeholderText: i18n("RTSP Stream URL")
       }
 
-      QQC2.Button {
+      Button {
         Layout.alignment: Qt.AlignRight
         text: i18n("Add stream")
         icon.name: "list-add"
@@ -37,38 +36,38 @@ ColumnLayout {
     }
   }
 
-  ColumnLayout {
-    id: streams
+  ButtonGroup {
+    id: buttonGroup
   }
 
-  Component {
-    id: row
-    PlasmaComponents3.RadioButton {
-      height: 10
-      Layout.fillWidth: true
-      onClicked: {
-        Plasmoid.configuration.defaultStream = text
+  ListView {
+    Layout.fillWidth: true
+    Layout.fillHeight: true
+    model: ListModel {
+      id: streamModel
+    }
+    spacing: 10
+    delegate: Row {
+      spacing: 20
+      width: parent.width
+      height: 40
+      RadioButton {
+        anchors.verticalCenter: parent.verticalCenter
+        text: model.streamUrl
+        checked: model.defaultStream 
+        ButtonGroup.group: buttonGroup
+        onCheckedChanged: {
+          model.defaultStream = checked
+          Plasmoid.configuration.defaultStream = text
+        }
       }
-    }
-  }
 
-  function addStream() {
-    const stream = newStreamUrl.text;
-    streamsList.push(stream);
-    Plasmoid.configuration.streamsUrls = streamsList;
-    console.log(streamsList.length);
-    const checked = streamsList.length === 1 ? true : false;
-    row.createObject(streams, { id: streamsList.length, text: newStreamUrl.text, checked: checked });
-    if (checked) {
-      Plasmoid.configuration.defaultStream = newStreamUrl.text;
-    }
-  }
-
-  function getAllStreams() {
-    const defaultStream = Plasmoid.configuration.defaultStream;
-    for (let i=0; i < streamsList.length; i++) {
-      const checked = streamsList[i] === defaultStream ? true : false;
-      row.createObject(streams, { id: i, text: streamsList[i], checked: checked });
+      Button {
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.right: parent.right
+        icon.name: "trash-empty"
+        onClicked: streamModel.remove(index)
+      }
     }
   }
 
@@ -76,8 +75,35 @@ ColumnLayout {
     Layout.fillHeight: true
   }
 
-  Component.onCompleted: {
-    getAllStreams()
+  function addStream() {
+    let duplicated = false;
+    for (let i = 0; i < streamModel.count; i++) {
+      duplicated = (streamModel.get(i).streamUrl === newStreamUrl.text || duplicated) ? true : false
+    }
+
+    if (newStreamUrl !== "" && !duplicated) {
+      const first = streamModel.count === 0 ? true : false
+      streamModel.append({ streamUrl: newStreamUrl.text, defaultStream: first })
+      if (first) {
+        Plasmoid.configuration.defaultStream = newStreamUrl.text
+      }
+      newStreamUrl.text = ""
+    }
   }
 
+  Component.onCompleted: {
+    for (let i = 0; i < streamsList.length; i++) {
+      const item = streamsList[i]
+      streamModel.append({ streamUrl: item.streamUrl, defaultStream: item.defaultStream })
+    }
+  }
+
+  Component.onDestruction: {
+    let streams = []
+    for (let i = 0; i < streamModel.count; i++) {
+      const item = streamModel.get(i)
+      streams.push({ streamUrl: item.streamUrl, defaultStream: item.defaultStream })
+    }
+    Plasmoid.configuration.streamsUrls = streams
+  }
 }

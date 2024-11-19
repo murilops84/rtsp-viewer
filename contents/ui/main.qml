@@ -1,66 +1,112 @@
 import QtQuick 2.15
+import QtQuick.Controls 2.8 
 import QtQuick.Layouts 1.1
 import QtMultimedia 5.15
 import org.kde.plasma.core 2.0 as PlasmaCore
-import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.plasma.plasmoid 2.0
 
-Item {
-  
-  readonly property string defaultStream: Plasmoid.configuration.defaultStream 
+ColumnLayout {
+  property string currentStream: Plasmoid.configuration.defaultStream 
 
   width: 480
-  height: (width / 16 * 9) + 10
-  Layout.minimumWidth: 480
-  Layout.maximumHeight: (width / 9 * 16) + 10
+  height: 300
+  Layout.preferredWidth: 480
+  Layout.preferredHeight: 300
   Plasmoid.backgroundHints: PlasmaCore.Types.ShadowBackground | PlasmaCore.Types.ConfigurableBackground
 
-  PlasmaComponents.CheckBox {
-    height: 10
-    id: muteCheckBox
-    text: i18n("Muted")
-    checked: true
-    visible: defaultStream
-    anchors {
-      bottom: parent.bottom
-      left: parent.left
-      margins: 10
-      bottomMargin: 20
-    }
-    z: 1
-    font.pixelSize: 10
-    onCheckedChanged: {
-      stream.muted = checked
-      console.log("Mute toggled:", checked ? "Muted" : "Unmuted")
-    }
-  }
-
-  PlasmaComponents.Label {
+  Row {
     Layout.fillWidth: true
-    Layout.fillHeight: true
-    anchors.horizontalCenter: parent.horizontalCenter
-    anchors.verticalCenter: parent.verticalCenter
-    visible: !defaultStream
-    text: "Add at less one stream at applet configurations"
-  }
+    Plasmoid.backgroundHints: PlasmaCore.Types.ShadowBackground | PlasmaCore.Types.ConfigurableBackground
+    height: 30
+    ComboBox {
+      id: streamComboBox
+      width: parent.width - 15 - muteButton.width
+      anchors {
+        top: parent.top
+        left: parent.left
+        margins: 5
+      }
+      model: ListModel {
+        id: streamModel
+      }
+      delegate: ItemDelegate {
+        text: model.streamUrl
+        highlighted: streamComboBox.currentIndex === index
+        onClicked: currentStream = model.streamUrl
+      }
+      onCurrentIndexChanged: {
+        currentStream = model.get(currentIndex).streamUrl
+      }
+    }
 
-  VideoOutput {
-    width: parent.width
-    height: parent.height
-    anchors.centerIn: parent
-    source: stream
-    visible: defaultStream 
-    MediaPlayer {
-      id: stream
-      source: defaultStream
-      autoPlay: true
-      muted: true
-      onError: {
-        console.error("Failed to connect to the camera:", errorString)
+    Button {
+      id: muteButton
+      icon.name: (stream.muted) ? "player-volume-muted" : "player-volume"
+      anchors {
+        top: parent.top
+        right: parent.right
+        margins: 5
+      }
+      onClicked: {
+        stream.muted = !stream.muted
       }
     }
   }
-  Component.onCompleted: stream.play()
+
+  Row {
+    Layout.preferredWidth: 480
+    Layout.preferredHeight: 270
+    anchors {
+      margins: 5
+    }
+    Label {
+      Layout.fillWidth: true
+      height: 40 
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.verticalCenter: parent.verticalCenter
+      visible: !currentStream
+      text: "Add at less one stream at applet configurations"
+    }
+
+    VideoOutput {
+      id: v1
+      width: 480
+      height: 270
+      anchors.centerIn: parent
+      visible: currentStream 
+      MediaPlayer {
+        id: stream
+        source: currentStream
+        autoPlay: true
+        muted: true
+        videoOutput: v1
+        onError: {
+          console.error("Failed to connect to the camera:", errorString)
+        }
+      }
+    }
+  }
+
+  function populateModel() {
+    const streamList = Plasmoid.configuration.streamsUrls
+    for (let i = 0; i < streamList.length; i++) {
+      const item = streamList[i]
+      streamModel.append({ streamUrl: item.streamUrl, defaultStream: item.defaultStream})
+    }
+  }
+
+  Connections {
+    target: Plasmoid.configuration
+    function onStreamsUrlsChanged(){
+      streamModel.clear()
+      populateModel()
+    }
+  }
+
+  Component.onCompleted: {
+    populateModel()
+    stream.play()
+  }
 }
 
 
