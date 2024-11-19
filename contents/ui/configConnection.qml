@@ -11,28 +11,22 @@ ColumnLayout {
   id: connections
 
   property var streamsList: Plasmoid.configuration.streamsUrls || [] 
-  property var rows: []
   
-  Kirigami.FormLayout {
-    Layout.fillWidth: true
  
-    RowLayout {
-      Layout.fillWidth: true
-  
-      TextField {
-        id: newStreamUrl
-        Layout.fillWidth: true
-        implicitWidth: parent.width
-        Kirigami.FormData.label: i18n("URL:")
-        placeholderText: i18n("RTSP Stream URL")
-      }
+  RowLayout {
+    Layout.fillWidth: true
 
-      Button {
-        Layout.alignment: Qt.AlignRight
-        text: i18n("Add stream")
-        icon.name: "list-add"
-        onClicked: addStream() 
-      }
+    TextField {
+      id: newStreamUrl
+      Layout.fillWidth: true
+      placeholderText: i18n("RTSP Stream URL")
+    }
+
+    Button {
+      Layout.alignment: Qt.AlignRight
+      text: i18n("Add stream")
+      icon.name: "list-add"
+      onClicked: addStream() 
     }
   }
 
@@ -43,16 +37,15 @@ ColumnLayout {
   ListView {
     Layout.fillWidth: true
     Layout.fillHeight: true
+    Layout.topMargin: 5
     model: ListModel {
       id: streamModel
     }
     spacing: 10
-    delegate: Row {
+      delegate: RowLayout {
       spacing: 20
       width: parent.width
-      height: 40
       RadioButton {
-        anchors.verticalCenter: parent.verticalCenter
         text: model.streamUrl
         checked: model.defaultStream 
         ButtonGroup.group: buttonGroup
@@ -63,8 +56,7 @@ ColumnLayout {
       }
 
       Button {
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.right: parent.right
+        Layout.alignment: Qt.AlignRight
         icon.name: "trash-empty"
         onClicked: streamModel.remove(index)
       }
