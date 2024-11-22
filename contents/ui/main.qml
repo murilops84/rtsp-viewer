@@ -59,6 +59,8 @@ ColumnLayout {
       id: v1
       Layout.fillWidth: true
       Layout.fillHeight: true
+      Layout.maximumWidth: 480
+      Layout.maximumHeight: 300
       visible: root.currentStream 
       MediaPlayer {
         id: stream
