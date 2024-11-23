@@ -5,7 +5,6 @@ import QtQuick.Dialogs 1.1
 
 import org.kde.plasma.plasmoid 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
-import org.kde.kirigami 2.14 as Kirigami
 
 ColumnLayout {
   id: connections
@@ -84,9 +83,10 @@ ColumnLayout {
   }
 
   Component.onCompleted: {
-    for (let i = 0; i < streamsList.length; i++) {
-      const item = streamsList[i]
-      streamModel.append({ streamUrl: item.streamUrl, defaultStream: item.defaultStream })
+    if (streamsList.length > 0) {
+      const json = JSON.parse(streamsList)
+      json.forEach(item => streamModel.append({ streamUrl: item.streamUrl, defaultStream: item.defaultStream}))
+      console.log(streamModel.count)
     }
   }
 
@@ -96,6 +96,6 @@ ColumnLayout {
       const item = streamModel.get(i)
       streams.push({ streamUrl: item.streamUrl, defaultStream: item.defaultStream })
     }
-    Plasmoid.configuration.streamsUrls = streams
+    Plasmoid.configuration.streamsUrls = JSON.stringify(streams)
   }
 }

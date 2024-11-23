@@ -8,6 +8,7 @@ import org.kde.plasma.plasmoid 2.0
 ColumnLayout {
   id: root
   
+  property var streamsList: Plasmoid.configuration.streamsUrls
   property string currentStream: Plasmoid.configuration.defaultStream
   
   width: 480
@@ -76,10 +77,9 @@ ColumnLayout {
   }
 
   function populateModel() {
-    const streamList = Plasmoid.configuration.streamsUrls
-    for (let i = 0; i < streamList.length; i++) {
-      const item = streamList[i]
-      streamModel.append({ streamUrl: item.streamUrl, defaultStream: item.defaultStream})
+    if (streamsList.length > 0) {
+      const json = JSON.parse(streamsList)
+      json.forEach(item => streamModel.append({ streamUrl: item.streamUrl, defaultStream: item.defaultStream}))
     }
   }
 
