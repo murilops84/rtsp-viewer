@@ -1,8 +1,10 @@
-import QtQuick 2.0
-import QtQml 2.2
+pragma ComponentBehavior: Bound
 
-import org.kde.plasma.plasmoid 2.0
-import org.kde.plasma.configuration 2.0
+import QtQuick
+import QtQml
+
+import org.kde.plasma.plasmoid
+import org.kde.plasma.configuration
 
 ConfigModel {
     id: configModel

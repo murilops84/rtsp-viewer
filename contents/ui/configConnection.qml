@@ -1,69 +1,102 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.8
-import QtQuick.Layouts 1.0
-import QtQuick.Dialogs 1.1
+pragma ComponentBehavior: Bound
 
-import org.kde.plasma.plasmoid 2.0
-import org.kde.plasma.core 2.0 as PlasmaCore
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.Dialogs
 
-ColumnLayout {
-  id: connections
+import org.kde.plasma.plasmoid
+import org.kde.plasma.core as PlasmaCore
+import org.kde.config as KConfig
+import org.kde.kcmutils as KCMUtils
+//import org.kde.kirigami as Kirigami
 
+KCMUtils.SimpleKCM {
   property var streamsList: Plasmoid.configuration.streamsUrls || [] 
-  
- 
-  RowLayout {
-    Layout.fillWidth: true
+  property var defaultStream: Plasmoid.configuration.defaultStream || ''
+  property var cfg_defaultStream
+  property var cfg_defaultStreamDefault
+  property var cfg_streamsUrls
+  property var cfg_streamsUrlsDefault
 
-    TextField {
-      id: newStreamUrl
+  ColumnLayout {
+    id: connections
+    width: root.height 
+    height: root.width
+     
+    RowLayout {
+      id: inputStream
       Layout.fillWidth: true
-      placeholderText: i18n("RTSP Stream URL")
-    }
 
-    Button {
-      Layout.alignment: Qt.AlignRight
-      text: i18n("Add stream")
-      icon.name: "list-add"
-      onClicked: addStream() 
-    }
-  }
-
-  ButtonGroup {
-    id: buttonGroup
-  }
-
-  ListView {
-    Layout.fillWidth: true
-    Layout.fillHeight: true
-    Layout.topMargin: 5
-    model: ListModel {
-      id: streamModel
-    }
-    spacing: 10
-      delegate: RowLayout {
-      spacing: 20
-      width: parent.width
-      RadioButton {
-        text: model.streamUrl
-        checked: model.defaultStream 
-        ButtonGroup.group: buttonGroup
-        onCheckedChanged: {
-          model.defaultStream = checked
-          Plasmoid.configuration.defaultStream = text
-        }
+      TextField {
+        id: newStreamUrl
+        Layout.fillWidth: true
+        placeholderText: i18n("RTSP Stream URL")
       }
 
       Button {
         Layout.alignment: Qt.AlignRight
-        icon.name: "trash-empty"
-        onClicked: streamModel.remove(index)
+        text: i18n("Add stream")
+        icon.name: "list-add"
+        onClicked: addStream() 
       }
     }
-  }
 
-  Item {
-    Layout.fillHeight: true
+    ButtonGroup {
+      id: buttonGroup
+    }
+
+    ListView {
+      Layout.fillWidth: true
+      Layout.fillHeight: true
+      Layout.topMargin: 5
+      model: ListModel {
+        id: streamModel
+      }
+      spacing: 10
+      delegate: RowLayout {
+        required property int index
+        required property var streamUrl
+        required property bool defaultStream
+        width: inputStream.width
+        RadioButton {
+          id: stream
+          text: streamUrl
+          checked: defaultStream || false 
+          ButtonGroup.group: buttonGroup
+          onCheckedChanged: {
+            defaultStream = checked || false
+            Plasmoid.configuration.defaultStream = text
+          }
+        }
+
+        Button {
+          Layout.alignment: Qt.AlignRight
+          icon.name: "trash-empty"
+          onClicked: streamModel.remove(index)
+        }
+      }
+    }
+
+    Item {
+      Layout.fillHeight: true
+    }
+
+    Component.onCompleted: {
+      if (streamsList.length > 0) {
+        const json = JSON.parse(streamsList)
+        json.forEach(item => streamModel.append({ streamUrl: item.streamUrl, defaultStream: item.defaultStream}))
+      }
+    }
+
+    Component.onDestruction: {
+      let streams = []
+      for (let i = 0; i < streamModel.count; i++) {
+        const item = streamModel.get(i)
+        streams.push({ streamUrl: item.streamUrl, defaultStream: item.defaultStream })
+      }
+      Plasmoid.configuration.streamsUrls = JSON.stringify(streams)
+    }
   }
 
   function addStream() {
@@ -82,20 +115,4 @@ ColumnLayout {
     }
   }
 
-  Component.onCompleted: {
-    if (streamsList.length > 0) {
-      const json = JSON.parse(streamsList)
-      json.forEach(item => streamModel.append({ streamUrl: item.streamUrl, defaultStream: item.defaultStream}))
-      console.log(streamModel.count)
-    }
-  }
-
-  Component.onDestruction: {
-    let streams = []
-    for (let i = 0; i < streamModel.count; i++) {
-      const item = streamModel.get(i)
-      streams.push({ streamUrl: item.streamUrl, defaultStream: item.defaultStream })
-    }
-    Plasmoid.configuration.streamsUrls = JSON.stringify(streams)
-  }
 }
