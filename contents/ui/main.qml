@@ -7,20 +7,27 @@ import org.kde.plasma.plasmoid
 
 PlasmoidItem {
 
+  id: plasmoid
+
   ListModel {
     id: streamModel
-  }
-
-  function populateModel() {
-    if (streamsList.length > 0) {
-      const json = JSON.parse(streamsList)
-      json.forEach(item => streamModel.append({ streamUrl: item.streamUrl, defaultStream: item.defaultStream}))
-    }
   }
 
   property var streamsList: Plasmoid.configuration.streamsUrls
   property string currentStream: Plasmoid.configuration.defaultStream
 
+  function populateModel() {
+    if (streamsList.length > 0) {
+      const json = JSON.parse(streamsList)
+      json.forEach(item => {
+        streamModel.append({ streamUrl: item.streamUrl, defaultStream: item.defaultStream})
+        if (item.defaultStream) {
+          currentStream = item.streamUrl
+        }
+      })
+    }
+  }
+ 
   fullRepresentation: Item {
     ColumnLayout {
       id: root
@@ -98,11 +105,20 @@ PlasmoidItem {
         }
       }
 
+      Connections {
+        target: plasmoid
+        function onExpandedChanged() {
+          plasmoid.expanded ? stream.play() : stream.stop()
+        }
+      }
+
+
       Component.onCompleted: {
         populateModel()
         stream.play()
       }
 
-   }
+    }
+
   }
 }
