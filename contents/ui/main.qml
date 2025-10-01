@@ -27,7 +27,7 @@ PlasmoidItem {
       })
     }
   }
- 
+
   fullRepresentation: Item {
     ColumnLayout {
       id: root
@@ -35,8 +35,8 @@ PlasmoidItem {
       height: 360
       
      Plasmoid.backgroundHints: PlasmaCore.Types.ShadowBackground | PlasmaCore.Types.ConfigurableBackground
-
-      RowLayout {
+   
+       RowLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         Layout.alignment: Qt.AlignTop
@@ -51,7 +51,7 @@ PlasmoidItem {
           }
           onCurrentIndexChanged: {
             stream.stop()
-            currentStream = model.get(currentIndex) ? model.get(currentIndex).streamUrl : ""
+            stream.source = currentStream 
             stream.play()
           }
         }
@@ -74,6 +74,19 @@ PlasmoidItem {
           text: "Add at least one stream at applet configurations"
         }
 
+        MediaPlayer {
+          id: stream
+          source: currentStream
+          videoOutput: v1
+          audioOutput: AudioOutput {
+            id: audio
+            muted: true
+          }
+          onErrorOccurred: {
+            console.error("Failed to connect to the camera:", errorString)
+          }
+        }
+ 
         VideoOutput {
           id: v1
           Layout.fillWidth: true
@@ -81,20 +94,7 @@ PlasmoidItem {
           Layout.maximumWidth: 480
           Layout.maximumHeight: 360
           visible: streamModel.count
-          MediaPlayer {
-            id: stream
-            source: currentStream
-            autoPlay: true 
-            videoOutput: v1
-            audioOutput: AudioOutput {
-              id: audio
-              muted: true
-            }
-            onErrorOccurred: {
-              console.error("Failed to connect to the camera:", errorString)
-            }
-          }
-        }
+       }
       }
 
       Connections {
@@ -107,15 +107,24 @@ PlasmoidItem {
 
       Connections {
         target: plasmoid
-        function onExpandedChanged() {
-          plasmoid.expanded ? stream.play() : stream.stop()
+ 
+        function startStream() {
+          stream.source = currentStream
+          stream.play()
+        }
+
+        function stopStream() {
+          stream.stop()
+          stream.source = ""
+        }
+     
+       function onExpandedChanged() {
+          plasmoid.expanded ? startStream() : stopStream()
         }
       }
 
-
       Component.onCompleted: {
         populateModel()
-        stream.play()
       }
 
     }
