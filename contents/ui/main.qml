@@ -15,6 +15,11 @@ PlasmoidItem {
 
   property var streamsList: Plasmoid.configuration.streamsUrls
   property string currentStream: Plasmoid.configuration.defaultStream
+  property bool pinned: false
+
+  hideOnWindowDeactivate: !pinned
+
+  onPinnedChanged: updateHideBehavior()
 
   function populateModel() {
     if (streamsList.length > 0) {
@@ -62,6 +67,14 @@ PlasmoidItem {
           onClicked: {
             audio.muted = !audio.muted
           }
+        }
+
+        Button {
+          id: pinButton
+          icon.name: plasmoid.pinned ? "window-unpin" : "window-pin"
+          checkable: true
+          checked: pinned
+          onClicked: pinned = checked
         }
       }
 
