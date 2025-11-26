@@ -71,7 +71,7 @@ PlasmoidItem {
 
         Button {
           id: pinButton
-          icon.name: plasmoid.pinned ? "window-unpin" : "window-pin"
+          icon.name: plasmoid.pinned ? "window-pin" : "window-unpin"
           checkable: true
           checked: pinned
           onClicked: pinned = checked
