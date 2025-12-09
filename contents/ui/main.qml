@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
+import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
 
@@ -15,11 +16,11 @@ PlasmoidItem {
 
   property var streamsList: Plasmoid.configuration.streamsUrls
   property string currentStream: Plasmoid.configuration.defaultStream
-  property bool pinned: false
+  property bool pin: false
 
-  hideOnWindowDeactivate: !pinned
+  hideOnWindowDeactivate: !pin
 
-  onPinnedChanged: updateHideBehavior()
+  onPinChanged: updateHideBehavior()
 
   function populateModel() {
     if (streamsList.length > 0) {
@@ -39,8 +40,6 @@ PlasmoidItem {
       width: 480
       height: 360
       
-     Plasmoid.backgroundHints: PlasmaCore.Types.ShadowBackground | PlasmaCore.Types.ConfigurableBackground
-   
        RowLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -61,7 +60,7 @@ PlasmoidItem {
           }
         }
 
-        Button {
+        PlasmaComponents.Button {
           id: muteButton
           icon.name: (audio.muted) ? "player-volume-muted" : "player-volume"
           onClicked: {
@@ -69,12 +68,13 @@ PlasmoidItem {
           }
         }
 
-        Button {
+        PlasmaComponents.Button {
           id: pinButton
-          icon.name: plasmoid.pinned ? "window-pin" : "window-unpin"
+          icon.name: "window-pin"
           checkable: true
-          checked: pinned
-          onClicked: pinned = checked
+          checked: pin
+          onToggled: pin = checked
+          display: PlasmaComponents.AbstractButton.IconOnly
         }
       }
 
