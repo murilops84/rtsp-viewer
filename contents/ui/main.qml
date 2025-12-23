@@ -20,8 +20,6 @@ PlasmoidItem {
 
   hideOnWindowDeactivate: !pin
 
-  onPinChanged: updateHideBehavior()
-
   function populateModel() {
     if (streamsList.length > 0) {
       const json = JSON.parse(streamsList)
@@ -90,18 +88,20 @@ PlasmoidItem {
         MediaPlayer {
           id: stream
           source: currentStream
-          videoOutput: v1
-          audioOutput: AudioOutput {
-            id: audio
-            muted: true
-          }
-          onErrorOccurred: {
+          videoOutput: video
+          audioOutput: audio
+          onErrorOccurred: function(error, errorString) {
             console.error("Failed to connect to the camera:", errorString)
           }
         }
+
+        AudioOutput {
+            id: audio
+            muted: true
+          }
  
         VideoOutput {
-          id: v1
+          id: video
           Layout.fillWidth: true
           Layout.fillHeight: true
           Layout.maximumWidth: 480
