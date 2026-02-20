@@ -7,9 +7,8 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
 
 PlasmoidItem {
-
   id: plasmoid
-
+  
   ListModel {
     id: streamModel
   }
@@ -22,124 +21,124 @@ PlasmoidItem {
 
   function populateModel() {
     if (streamsList.length > 0) {
-      const json = JSON.parse(streamsList)
+      const json = JSON.parse(streamsList);
       json.forEach(item => {
-        streamModel.append({ streamUrl: item.streamUrl, defaultStream: item.defaultStream})
+        streamModel.append({
+          streamUrl: item.streamUrl,
+          defaultStream: item.defaultStream
+        });
         if (item.defaultStream) {
-          currentStream = item.streamUrl
+          currentStream = item.streamUrl;
         }
-      })
+      });
     }
   }
 
-  fullRepresentation: Item {
-    ColumnLayout {
-      id: root
-      width: 480
-      height: 360
-      
-       RowLayout {
+  fullRepresentation: ColumnLayout {
+    id: root
+    Layout.minimumWidth: 480
+    Layout.preferredHeight: 310
+    Layout.minimumHeight: Layout.preferredHeight
+    Layout.maximumHeight: Layout.preferredHeight
+    RowLayout {
+      Layout.fillWidth: true
+      Layout.fillHeight: true
+      ComboBox {
+        id: streamComboBox
+        Layout.fillWidth: true
+        model: streamModel
+        delegate: ItemDelegate {
+          text: model.streamUrl
+          highlighted: streamComboBox.currentIndex === index
+          onClicked: currentStream = model.streamUrl
+        }
+        onCurrentIndexChanged: {
+          stream.stop();
+          stream.source = currentStream;
+          stream.play();
+        }
+      }
+
+      PlasmaComponents.Button {
+        id: muteButton
+        icon.name: (audio.muted) ? "player-volume-muted" : "player-volume"
+        onClicked: {
+          audio.muted = !audio.muted;
+        }
+      }
+
+      PlasmaComponents.Button {
+        id: pinButton
+        icon.name: "window-pin"
+        checkable: true
+        checked: pin
+        onToggled: pin = checked
+        display: PlasmaComponents.AbstractButton.IconOnly
+      }
+    }
+
+    RowLayout {
+      id: media
+      Layout.fillWidth: true
+      Layout.fillHeight: true
+      Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
+      Label {
+        Layout.fillHeight: visible ? true : false
+        visible: !streamModel.count
+        text: "Add at least one stream at applet configurations"
+      }
+
+      MediaPlayer {
+        id: stream
+        source: currentStream
+        videoOutput: video
+        audioOutput: audio
+        onErrorOccurred: function (error, errorString) {
+            console.error("Failed to connect to the camera:", errorString);
+        }
+      }
+
+      AudioOutput {
+        id: audio
+        muted: true
+      }
+
+      VideoOutput {
+        id: video
         Layout.fillWidth: true
         Layout.fillHeight: true
-        Layout.alignment: Qt.AlignTop
-        ComboBox {
-          id: streamComboBox
-          Layout.fillWidth: true
-          model: streamModel
-          delegate: ItemDelegate {
-            text: model.streamUrl
-            highlighted: streamComboBox.currentIndex === index
-            onClicked: currentStream = model.streamUrl
-          }
-          onCurrentIndexChanged: {
-            stream.stop()
-            stream.source = currentStream 
-            stream.play()
-          }
-        }
+        visible: streamModel.count
+      }
+    }
 
-        PlasmaComponents.Button {
-          id: muteButton
-          icon.name: (audio.muted) ? "player-volume-muted" : "player-volume"
-          onClicked: {
-            audio.muted = !audio.muted
-          }
-        }
+    Connections {
+      target: Plasmoid.configuration
+      function onStreamsUrlsChanged() {
+        streamModel.clear();
+        populateModel();
+      }
+    }
 
-        PlasmaComponents.Button {
-          id: pinButton
-          icon.name: "window-pin"
-          checkable: true
-          checked: pin
-          onToggled: pin = checked
-          display: PlasmaComponents.AbstractButton.IconOnly
-        }
+    Connections {
+      target: plasmoid
+
+      function startStream() {
+        stream.source = currentStream;
+        stream.play();
       }
 
-      RowLayout {
-        Layout.fillWidth: true
-        Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
-        Label {
-          Layout.fillHeight: visible ? true : false
-          visible: !streamModel.count
-          text: "Add at least one stream at applet configurations"
-        }
-
-        MediaPlayer {
-          id: stream
-          source: currentStream
-          videoOutput: video
-          audioOutput: audio
-          onErrorOccurred: function(error, errorString) {
-            console.error("Failed to connect to the camera:", errorString)
-          }
-        }
-
-        AudioOutput {
-            id: audio
-            muted: true
-          }
- 
-        VideoOutput {
-          id: video
-          Layout.fillWidth: true
-          Layout.fillHeight: true
-          Layout.maximumWidth: 480
-          Layout.maximumHeight: 360
-          visible: streamModel.count
-       }
+      function stopStream() {
+        stream.stop();
+        stream.source = "";
       }
 
-      Connections {
-        target: Plasmoid.configuration
-        function onStreamsUrlsChanged(){
-          streamModel.clear()
-          populateModel()
-        }
+      function onExpandedChanged() {
+        plasmoid.expanded ? startStream() : stopStream();
       }
+    }
 
-      Connections {
-        target: plasmoid
- 
-        function startStream() {
-          stream.source = currentStream
-          stream.play()
-        }
-
-        function stopStream() {
-          stream.stop()
-          stream.source = ""
-        }
-     
-       function onExpandedChanged() {
-          plasmoid.expanded ? startStream() : stopStream()
-        }
-      }
-
-      Component.onCompleted: {
-        populateModel()
-      }
-
+    Component.onCompleted: {
+      populateModel();
     }
 
   }
