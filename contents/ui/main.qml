@@ -52,11 +52,7 @@ PlasmoidItem {
           highlighted: streamComboBox.currentIndex === index
           onClicked: currentStream = model.streamUrl
         }
-        onCurrentIndexChanged: {
-          stream.stop();
-          stream.source = currentStream;
-          stream.play();
-        }
+        onCurrentIndexChanged: stream.play()
       }
 
       PlasmaComponents.Button {
@@ -123,13 +119,11 @@ PlasmoidItem {
       target: plasmoid
 
       function startStream() {
-        stream.source = currentStream;
         stream.play();
       }
 
       function stopStream() {
         stream.stop();
-        stream.source = "";
       }
 
       function onExpandedChanged() {
